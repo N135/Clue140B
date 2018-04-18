@@ -9,4 +9,13 @@ setup_weapons([H|T]) :- assert(valid_weapon(H)), setup_weapons(T).
 setup_rooms([H]) :- assert(valid_room(H)).
 setup_rooms([H|T]) :- assert(valid_room(H))), setup_rooms(T).
 
-hand(People,Weapons,Rooms) :- attach_people(People), clear_weapons(Weapons), clear_rooms(Rooms).
+hand(People,Weapons,Rooms) :- attach_people(People), attach_weapons(Weapons), attach_rooms(Rooms).
+
+attach_people([H]) :- assert(my_person(H)).
+attach_people([H|T]) :- assert(my_person(H)), attach_people(T).
+
+attach_weapons([H]) :- assert(my_weapon(H)).
+attach_weapons([H|T]) :- assert(my_weapon(H)), attach_weapons(T).
+
+attach_rooms([H]) :- assert(my_room(H)),
+attach_rooms([H|T]) :- assert(my_room(H)), attach_rooms(T).
