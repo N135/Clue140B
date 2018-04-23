@@ -27,6 +27,8 @@ suggestion(Player,Person,Weapon,Room) :- player_num(X), Player < X, me(Y), Playe
 %has_one_of(Player,Person,Weapon,Room) :- player_num(X), Player < X, valid_person(Person), valid_weapon(Weapon), valid_room(Room).
 
 
+%This returns true if for every category, nobody has X AND for every card other than X, somebody has it.
+make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room). 
 
 
 %Supporting code: Users dont need to look here
@@ -57,7 +59,8 @@ attach_weapons([H|T],Player) :- valid_weapon(H), shown(Player,H), attach_weapons
 attach_rooms([H],Player) :- valid_room(H), shown(Player,H).
 attach_rooms([H|T],Player) :- valid_room(H), shown(Player,H), attach_rooms(T).
 
-%establishes who has what, and then removes could_have from all players, sets has for the passed player and could 
+%establishes who has what, and then removes could_have from all players, sets has for the passed player and could
+
 set(1,H,1) :- retract(could_have(1,H)), assert(has(1,H)).
 set(Player,H,1) :- Player \== 1, retract(could_have(1,H)), assert(doesnt_have(1,H)).
 set(Player,H,X) :- Player == X, retract(could_have(X,H)), assert(has(X,H)), succ(X0,X), set(Player,H,X0).
@@ -65,3 +68,11 @@ set(Player,H,X) :- Player \== X, retract(could_have(X,H)), assert(doesnt_have(X,
 
 %sets all the passed cards for the passed player to doesnt_have()
 set_not(Player,Person,Weapon,Room) :- retract(could_have(Player,Person)), assert(doesnt_have(Player,Person)), retract(could_have(Player,Weapon)), assert(doesnt_have(Player,Weapon)), retract(could_have(Player,Room)), assert(doesnt_have(Player,Room)). 
+
+%Supporting code for make_accusation
+
+know(Person) :- valid_person(Person), not(somebody_has_person(Person)), last_person_standing(Person).
+know(Weapon) :- valid_weapon(Weapon), not(somebody_has_weapon(Weapon)), last_weapon_standing(Weapon).
+know(Room) :- valid_room(Room), not(somebody_has_room(Room)), last_room_standing(Room).
+
+
