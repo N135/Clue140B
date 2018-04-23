@@ -3,7 +3,7 @@
 
 %setup: Takes 3 lists; a list of valid People playing cards, Weapon playing cards, and Room playing cards respectively. Also takes number of players at the table and where the user falls in the turn order. 
 
-setup(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num)), setup_people(People), setup_weapons(Weapons), setup_rooms(Rooms),  I_am < Player_num, assert(me(I_am)).
+setup(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num)), assert(people(People)), assert(weapons(Weapons)), assert(rooms(Rooms)), setup_people(People), setup_weapons(Weapons), setup_rooms(Rooms),  I_am < Player_num, assert(me(I_am)).
 
 %hand: takes 3 lists; the People cards, Weapons cards and Room cards that start in the players hand.
 
@@ -71,8 +71,22 @@ set_not(Player,Person,Weapon,Room) :- retract(could_have(Player,Person)), assert
 
 %Supporting code for make_accusation
 
-know(Person) :- valid_person(Person), not(somebody_has_person(Person)), last_person_standing(Person).
-know(Weapon) :- valid_weapon(Weapon), not(somebody_has_weapon(Weapon)), last_weapon_standing(Weapon).
-know(Room) :- valid_room(Room), not(somebody_has_room(Room)), last_room_standing(Room).
+know(Person) :- player_num(NumPlayers), people(PeopleList), valid_person(Person), not(somebody_has(NumPlayers, Person)), last_standing(Person, PeopleList).
+know(Weapon) :- player_num(NumPlayers), weapons(WeaponsList), valid_weapon(Weapon), not(somebody_has(NumPlayers, Weapon)), last_standing(Weapon, WeaponsList).
+know(Room) :- 	player_num(NumPlayers), rooms(RoomsList), valid_room(Room), not(somebody_has(NumPlayers, Room)), last_standing(Room, RoomsList).
+
+somebody_has(1, Card) :- has(1, Card).
+somebody_has(Player, Card) :- has(Player, Card).
+somebody_has(Player, Card) :- succ(PrevPlayer, Player), somebody_has_person(PrevPlayer, Card).
+
+
+% true if all People except for Person is known to be held by some Player.
+last_standing(Card, [Cards_Head]) :- Card == Cards_Head.
+last_standing(Card, [Cards_Head]) :- player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head).
+last_standing(Card, [Cards_Head | Cards_Tail]) :- Card == Cards_Head, last_standing(Person, Cards_Tail).
+last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head), last_standing(Person, Cards_Tail).
+
+
+
 
 
