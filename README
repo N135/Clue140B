@@ -1,0 +1,15 @@
+To test that the accusation works use this:
+
+setup([mustard, scarlet, plum, green, white, peacock], [rope, lead_pipe, knife, wrench, candlestick, pistol], [kitchen, ballroom, conservatory, dining_room, billiard_room, library, lounge, hall, study], 3, 1).
+
+hand([mustard, scarlet, plum, green, white], [rope], []).
+
+know(Person).
+
+
+
+Returns true with Person = peacock
+
+an accusation is simply know(Person), know(Weapon), and know(Room).
+
+I also added a my_suggestion predicate which is what the user would call when they are making a suggestion. We need to add a different suggestion_made() predicate which should be called by the user when someone else has made a suggestion. I chose to split it up this way because the arguments are different depending on whether or not the subject is making the suggestion. When the subject makes the suggestion the arguments are the suggested objects and a list of player/card pairs that have been shown to him. For the case where it is someone else making a suggestion, the arguments are again the objects but since we don't know which cards are being shown, the other argument is only a number indicating the player who showed the person making a suggestion their card.
