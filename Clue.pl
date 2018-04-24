@@ -29,7 +29,7 @@ make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room).
 % The predicate adds the information given to the knowledgebase.
 %later stages should do something with Person, Weapon, and Room
 
-my_suggestion(Person, Weapon, Room, Responses) :- add_responses(Responses), me(Me), player_num(P) add_dont_have(Person, Weapon, Room, Responses, P).
+my_suggestion(Person, Weapon, Room, Responses) :- add_responses(Responses), me(Me), player_num(P), add_dont_have(Person, Weapon, Room, Responses, P).
 
 %Supporting code: Users dont need to look here
 
