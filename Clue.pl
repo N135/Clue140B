@@ -98,7 +98,7 @@ last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_nu
 
 
 
-add_dont_have(PlayerShowing, CardShowed, Player) :- not(Player = PlayerShowing), assert(doesnt_have(Player, CardShowed)).
+add_dont_have(PlayerShowing, CardShowed, Player) :- not(Player = PlayerShowing), assert(doesnt_have(Player, CardShowed)), succ(Prev, Player), add_dont_have(PlayerShowing, CardShowed, Prev).
 
 
 shown(Player,H) :- player_num(Y), set(Player,H,Y).
