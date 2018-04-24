@@ -29,7 +29,8 @@ make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room).
 % The predicate adds the information given to the knowledgebase.
 %later stages should do something with Person, Weapon, and Room
 
-my_suggestion(Person, Weapon, Room, Responses) :- add_responses(Responses), player_num(P), add_dont_have(Person, Weapon, Room, Responses, P).
+my_suggestion(Person, Weapon, Room, []).
+my_suggestion(Person, Weapon, Room, [PlayerShowing, CardShowed]) :- shown(PlayerShowing, CardShowed), player_num(P), add_dont_have(PlayerShowing, CardShowed, P).
 
 %Supporting code: Users dont need to look here
 
@@ -96,12 +97,8 @@ last_standing(Card, [Cards_Head | Cards_Tail]) :- Card == Cards_Head, last_stand
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head), last_standing(Card, Cards_Tail).
 
 
-%my_suggestion helpers
-add_responses([[Player | Card]]) :- shown(Player, Card).
-add_responses([[Player | Card] | Tail]) :- shown(Player, Card), add_responses(Tail).
 
-add_dont_have([], Player).
-add_dont_have([PlayerShowing | CardShowed], Player) :- not(Player = PlayerShowing), assert(doesnt_have(Player, CardShowed)).
+add_dont_have(PlayerShowing, CardShowed, Player) :- not(Player = PlayerShowing), assert(doesnt_have(Player, CardShowed)).
 
 
 shown(Player,H) :- player_num(Y), set(Player,H,Y).
