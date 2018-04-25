@@ -2,11 +2,10 @@
 %All of these functions should be used by the user to allow the program to know the game state.
 
 /*
-
-setup: Takes 3 lists; a list of valid People playing cards, Weapon playing cards,
+setup:
+Takes 3 lists; a list of valid People playing cards, Weapon playing cards,
 and Room playing cards respectively. Also takes number of players at the table and
 where the user falls in the turn order. 
-
 */
 
 setup_game(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num)),
@@ -14,39 +13,57 @@ setup_game(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num
 		setup_people(People), setup_weapons(Weapons), setup_rooms(Rooms),
 		I_am < Player_num, assert(me(I_am)).
 /*
+setup_hand:
 takes 3 lists; the People cards, Weapons cards and Room cards that start in the players hand.
 */
 setup_hand(People,Weapons,Rooms) :- me(X), setup_people(People,X), setup_weapons(Weapons,X), setup_rooms(Rooms,X),
-people(Plist), weapons(Wlist), rooms(Rlist),
-dont_have_except(Plist, People, X), dont_have_except(Wlist, Weapons, X), dont_have_except(Rlist, Rooms, X).
+		people(Plist), weapons(Wlist), rooms(Rlist),
+		dont_have_except(Plist, People, X), dont_have_except(Wlist, Weapons, X), dont_have_except(Rlist, Rooms, X).
 
-%This returns true if for every category, nobody has X AND for every card other than X, somebody has it.
+/*
+make_accusation:
+This returns true if for every category, nobody has X AND for every card other than X, somebody has it.
+*/
 make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room).
 
-% Person, Weapon, and Room are the suggested objects and Responses is a List of at most 3 elements, each of which is a 2 element list containing the
-%player number who showed me the card and the card that they showed me.
-% The predicate adds the information given to the knowledgebase.
-%later stages should do something with Person, Weapon, and Room
+/*
 
-my_suggestion(Person, Weapon, Room, []).
-my_suggestion(Person, Weapon, Room, [PlayerShowing, CardShowed]) :- shown(PlayerShowing, CardShowed), player_num(P), add_dont_have(PlayerShowing, CardShowed, P).
+*/
+my_suggestion(Person, Weapon, Room, []) :- me(M), X is M + 1, add_dont_have(X, M, Person, Weapon, Room), notepad().
+my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), X is M + 1, add_dont_have(X, Player, Person, Weapon, Room), notepad().
 
+/*
+
+*/
+other_suggestion(Person, Weapon, Room, [Player, Responder]) :- X is Player + 1, add_dont_have(X, Responder, Person, Weapon, Room), check_others(), notepad(). 
+other_suggestion(Person, Weapon, Room, [Player]) :- X is Player + 1, add_dont_have(X, Player, Person, Weapon, Room), notepad(). 
+
+/*
+notepad:
+Prints an easy to read graphic display of everything known so far.
+*/
 notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
+
+
 
 %Supporting code: Users dont need to look here
 
 %-------------------------------------------------------------------
 
 %Supporting predicates for setup
+%Establishes valid people cards
 setup_people([H]) :- assert(valid_person(H)), setup_have(H).
 setup_people([H|T]) :- assert(valid_person(H)), setup_have(H), setup_people(T).
 
+%Establishes valid weapon cards
 setup_weapons([H]) :- assert(valid_weapon(H)), setup_have(H).
 setup_weapons([H|T]) :- assert(valid_weapon(H)), setup_have(H), setup_weapons(T).
 
+%Establishes valid room cards
 setup_rooms([H]) :- assert(valid_room(H)), setup_have(H).
 setup_rooms([H|T]) :- assert(valid_room(H)), setup_have(H), setup_rooms(T).
 
+%Makes it so that everyone could_have all the cards.
 setup_have(H) :- player_num(Y), setup_have(Y,H).
 setup_have(1,H) :- assert(could_have(1,H)).
 setup_have(X,H) :- assert(could_have(X,H)), succ(X0, X), setup_have(X0,H).
@@ -96,11 +113,18 @@ last_standing(Card, [Cards_Head]) :- player_num(NumPlayers), somebody_has(NumPla
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card == Cards_Head, last_standing(Card, Cards_Tail).
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head), last_standing(Card, Cards_Tail).
 
-add_dont_have(PlayerShowing, CardShowed, Player) :- not(Player = PlayerShowing), assert(doesnt_have(Player, CardShowed)), succ(Prev, Player), add_dont_have(PlayerShowing, CardShowed, Prev).
+%make all players between start and end not have any of the 3.
+add_dont_have(Start, End, Person, Weapon, Room) :- plus(Start,1,S0), player_num(P), S0 > P, Start \== End,
+		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
+	       	add_dont_have(1, End, Person, Weapon, Room).
+add_dont_have(Start, End, Person, Weapon, Room) :- plus(Start,1,S0), Start \== End,
+		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
+		add_dont_have(S0, End, Person, Weapon, Room).
+add_dont_have(X, X, _, _, _).
 
 shown(Player,H) :- player_num(Y), set(Player,H,Y).
 
-%helper for notepad, outputs the list of players
+%helpers for notepad
 output_players(P) :- tab(20), op_helper(P,1).
 op_helper(P,X) :- X =< P, write(X), tab(2), plus(X,1,X0), op_helper(P,X0).
 op_helper(P,X) :- X > P, nl. 
