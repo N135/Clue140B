@@ -11,7 +11,7 @@ The assumption that a higher numbered player will always be to the left, barring
 setup_game(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num)),
 		assert(people(People)), assert(weapons(Weapons)), assert(rooms(Rooms)),
 		setup_people(People), setup_weapons(Weapons), setup_rooms(Rooms),
-		I_am < Player_num, assert(me(I_am)).
+		I_am =< Player_num, assert(me(I_am)).
 /*
 setup_hand:
 takes 3 lists; the People cards, Weapons cards and Room cards that start in the players hand.
@@ -32,19 +32,19 @@ make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room).
 my_suggestion:
 Entered when the user makes a suggestion.
 Takes a person, weapon and room card. Also takes whatever player responded and with what card they responded, optionally.
-If no player and card is given, it's assumed no one at the table (barring the user) had any of the 3 cards.
+If no player and card is given, its assumed no one at the table (barring the user) had any of the 3 cards.
 */
 my_suggestion(Person, Weapon, Room, []) :- me(M), X is M + 1, add_dont_have(X, M, Person, Weapon, Room), notepad().
 my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), X is M + 1, add_dont_have(X, Player, Person, Weapon, Room), notepad().
 
-/*
+*/
 other_suggestion:
 Entered in response to another players suggestion. 
 */
-other_suggestion(Person, Weapon, Room, [Player, Responder]) :- X is Player + 1,
-		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), notepad().
-other_suggestion(Person, Weapon, Room, [Player]) :- X is Player + 1, 
-		add_dont_have(X, Player, Person, Weapon, Room), notepad(). 
+other_suggestion(Person, Weapon, Room, [Player, Responder]) :- succ(Player,Y).
+%		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), notepad().
+%other_suggestion(Person, Weapon, Room, [Player]) :- X is Player + 1, 
+%		add_dont_have(X, Player, Person, Weapon, Room), notepad(). 
 
 /*
 notepad:
@@ -91,7 +91,7 @@ setup_rooms([H|T],Me) :- valid_room(H), shown(Me,H), setup_rooms(T, Me).
 dont_have_except([H|T], Passed, Me) :- not(member(H, Passed)), assert(doesnt_have(Me, H)), dont_have_except(T, Passed, Me).
 dont_have_except([H|T], Passed, Me) :- member(H, Passed), dont_have_except(T, Passed, Me).
 dont_have_except([H], Passed, Me) :-  not(member(H, Passed)), assert(doesnt_have(Me, H)).
-dont_have_except([H], Passed, Me) :-  member(H, Passed)).
+dont_have_except([H], Passed, Me) :-  member(H, Passed).
 
 %establishes who has what, and then removes could_have from all players, sets has for the passed player and could
 
@@ -120,6 +120,8 @@ last_standing(Card, [Cards_Head | Cards_Tail]) :- Card == Cards_Head, last_stand
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head), last_standing(Card, Cards_Tail).
 
 %make all players between start and end not have any of the 3.
+add_dont_have(Start, End, Person, Weapon, Room) :- player_num(P), Start > P,
+	       	add_dont_have(1, End, Person, Weapon, Room).
 add_dont_have(Start, End, Person, Weapon, Room) :- plus(Start,1,S0), player_num(P), S0 > P, Start \== End,
 		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
 	       	add_dont_have(1, End, Person, Weapon, Room).
