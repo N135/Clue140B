@@ -17,9 +17,8 @@ setup_game(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num
 takes 3 lists; the People cards, Weapons cards and Room cards that start in the players hand.
 */
 setup_hand(People,Weapons,Rooms) :- me(X), setup_people(People,X), setup_weapons(Weapons,X), setup_rooms(Rooms,X),
-dont_have_people_except(People, X), dont_have_weapons_except(Weapons, X), dont_have_rooms_except(Rooms, X).
-
-
+people(Plist), weapons(Wlist), rooms(Rlist),
+dont_have_except(Plist, People, X), dont_have_except(Wlist, Weapons, X), dont_have_except(Rlist, Rooms, X).
 
 %This returns true if for every category, nobody has X AND for every card other than X, somebody has it.
 make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room).
@@ -31,6 +30,8 @@ make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room).
 
 my_suggestion(Person, Weapon, Room, []).
 my_suggestion(Person, Weapon, Room, [PlayerShowing, CardShowed]) :- shown(PlayerShowing, CardShowed), player_num(P), add_dont_have(PlayerShowing, CardShowed, P).
+
+notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
 
 %Supporting code: Users dont need to look here
 
@@ -64,10 +65,10 @@ setup_rooms([], Me).
 setup_rooms([H],Me) :- valid_room(H), shown(Me,H).
 setup_rooms([H|T],Me) :- valid_room(H), shown(Me,H), setup_rooms(T, Me).
 
-dont_have_people_except(People, Me) :- valid_person(P), not(member(P, People)), assert(doesnt_have(Me, P)).
-dont_have_weapons_except(Weapons, Me) :- valid_weapon(W), not(member(W, Weapons)), assert(doesnt_have(Me, W)).
-dont_have_rooms_except(Rooms, Me) :- valid_room(R), not(member(R, Rooms)), assert(doesnt_have(Me, R)).
-
+dont_have_except([H|T], Passed, Me) :- not(member(H, Passed)), assert(doesnt_have(Me, H)), dont_have_except(T, Passed, Me).
+dont_have_except([H|T], Passed, Me) :- member(H, Passed), dont_have_except(T, Passed, Me).
+dont_have_except([H], Passed, Me) :-  not(member(H, Passed)), assert(doesnt_have(Me, H)).
+dont_have_except([H], Passed, Me) :-  member(H, Passed)).
 
 %establishes who has what, and then removes could_have from all players, sets has for the passed player and could
 
@@ -89,17 +90,25 @@ somebody_has(1, Card) :- has(1, Card).
 somebody_has(Player, Card) :- has(Player, Card).
 somebody_has(Player, Card) :- succ(PrevPlayer, Player), somebody_has(PrevPlayer, Card).
 
-
 % true if all People except for Person is known to be held by some Player.
 last_standing(Card, [Cards_Head]) :- Card == Cards_Head.
 last_standing(Card, [Cards_Head]) :- player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head).
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card == Cards_Head, last_standing(Card, Cards_Tail).
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head), last_standing(Card, Cards_Tail).
 
-
-
 add_dont_have(PlayerShowing, CardShowed, Player) :- not(Player = PlayerShowing), assert(doesnt_have(Player, CardShowed)), succ(Prev, Player), add_dont_have(PlayerShowing, CardShowed, Prev).
-
 
 shown(Player,H) :- player_num(Y), set(Player,H,Y).
 
+%helper for notepad, outputs the list of players
+output_players(P) :- tab(20), op_helper(P,1).
+op_helper(P,X) :- X =< P, write(X), tab(2), plus(X,1,X0), op_helper(P,X0).
+op_helper(P,X) :- X > P, nl. 
+
+output(Players,[H]) :- write(H), write_length(H,I,[]), Z is 20 - I,  tab(Z), line(Players, H, 1), nl.
+output(Players,[H | T]) :- write(H), write_length(H,I,[]), Z is 20 - I,  tab(Z), line(Players, H, 1),  nl, output(Players,T).
+
+line(P, H, X) :- X =< P, has(X,H), write(o), tab(2), plus(X,1,X0), line(P, H, X0).
+line(P, H, X) :- X =< P, doesnt_have(X,H), write(x), tab(2), plus(X,1,X0), line(P, H, X0).
+line(P, H, X) :- X =< P, could_have(X,H), write(?), tab(2), plus(X,1,X0), line(P, H, X0).
+line(P, H, X) :- X > P.
