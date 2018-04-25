@@ -6,8 +6,8 @@ setup:
 Takes 3 lists; a list of valid People playing cards, Weapon playing cards,
 and Room playing cards respectively. Also takes number of players at the table and
 where the user falls in the turn order. 
+The assumption that a higher numbered player will always be to the left, barring position player_num.
 */
-
 setup_game(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num)),
 		assert(people(People)), assert(weapons(Weapons)), assert(rooms(Rooms)),
 		setup_people(People), setup_weapons(Weapons), setup_rooms(Rooms),
@@ -23,28 +23,34 @@ setup_hand(People,Weapons,Rooms) :- me(X), setup_people(People,X), setup_weapons
 /*
 make_accusation:
 This returns true if for every category, nobody has X AND for every card other than X, somebody has it.
+
+Might be useful to build in write() statements eventually, so that it can be called from inside other functions (notepad could suggest accusation at end.)
 */
 make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room).
 
 /*
-
+my_suggestion:
+Entered when the user makes a suggestion.
+Takes a person, weapon and room card. Also takes whatever player responded and with what card they responded, optionally.
+If no player and card is given, it's assumed no one at the table (barring the user) had any of the 3 cards.
 */
 my_suggestion(Person, Weapon, Room, []) :- me(M), X is M + 1, add_dont_have(X, M, Person, Weapon, Room), notepad().
 my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), X is M + 1, add_dont_have(X, Player, Person, Weapon, Room), notepad().
 
 /*
-
+other_suggestion:
+Entered in response to another players suggestion. 
 */
-other_suggestion(Person, Weapon, Room, [Player, Responder]) :- X is Player + 1, add_dont_have(X, Responder, Person, Weapon, Room), check_others(), notepad(). 
-other_suggestion(Person, Weapon, Room, [Player]) :- X is Player + 1, add_dont_have(X, Player, Person, Weapon, Room), notepad(). 
+other_suggestion(Person, Weapon, Room, [Player, Responder]) :- X is Player + 1,
+		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), notepad().
+other_suggestion(Person, Weapon, Room, [Player]) :- X is Player + 1, 
+		add_dont_have(X, Player, Person, Weapon, Room), notepad(). 
 
 /*
 notepad:
 Prints an easy to read graphic display of everything known so far.
 */
 notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
-
-
 
 %Supporting code: Users dont need to look here
 
@@ -123,6 +129,12 @@ add_dont_have(Start, End, Person, Weapon, Room) :- plus(Start,1,S0), Start \== E
 add_dont_have(X, X, _, _, _).
 
 shown(Player,H) :- player_num(Y), set(Player,H,Y).
+
+%helpers for other_accusation:
+check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Room)).
+check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Room), X \== Player, Y \== Player, assert(has(Player,Weapon)).
+check_others(Person,Weapon,Room,Player) :- has(X,Room), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Person)).
+check_others(_,_,_,_).
 
 %helpers for notepad
 output_players(P) :- tab(20), op_helper(P,1).
