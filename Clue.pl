@@ -44,7 +44,7 @@ other_suggestion:
 Entered in response to another players suggestion. 
 */
 other_suggestion(Person, Weapon, Room, [Player, Responder]) :- succ(Player,Y),
-		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), notepad().
+		add_dont_have(Y, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), notepad().
 other_suggestion(Person, Weapon, Room, [Player]) :- X is Player + 1, 
 		add_dont_have(X, Player, Person, Weapon, Room), notepad(). 
 
