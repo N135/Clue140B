@@ -34,6 +34,8 @@ Entered when the user makes a suggestion.
 Takes a person, weapon and room card. Also takes whatever player responded and with what card they responded, optionally.
 If no player and card is given, its assumed no one at the table (barring the user) had any of the 3 cards.
 */
+
+
 my_suggestion(Person, Weapon, Room, []) :- me(M), X is M + 1, add_dont_have(X, M, Person, Weapon, Room), notepad().
 my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), X is M + 1, add_dont_have(X, Player, Person, Weapon, Room), notepad().
 
@@ -120,15 +122,13 @@ last_standing(Card, [Cards_Head | Cards_Tail]) :- Card == Cards_Head, last_stand
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head), last_standing(Card, Cards_Tail).
 
 %make all players between start and end not have any of the 3.
-add_dont_have(Start, End, Person, Weapon, Room) :- player_num(P), Start > P,
-	       	add_dont_have(1, End, Person, Weapon, Room).
-add_dont_have(Start, End, Person, Weapon, Room) :- plus(Start,1,S0), player_num(P), S0 > P, Start \== End,
-		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
-	       	add_dont_have(1, End, Person, Weapon, Room).
-add_dont_have(Start, End, Person, Weapon, Room) :- plus(Start,1,S0), Start \== End,
-		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
-		add_dont_have(S0, End, Person, Weapon, Room).
+
 add_dont_have(X, X, _, _, _).
+add_dont_have(Start, End, Person, Weapon, Room) :- player_num(P), Start > P, End \== 1, assert(doesnt_have(1, Person)),
+									assert(doesnt_have(1, Weapon)), assert(doesnt_have(1, Room)), add_dont_have(2, End, Person, Weapon, Room).
+
+add_dont_have(Start, End, Person, Weapon, Room) :- Start \== End, assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)),
+				assert(doesnt_have(Start,Room)), plus(Start, 1, S0), add_dont_have(S0, End, Person, Weapon, Room).
 
 shown(Player,H) :- player_num(Y), set(Player,H,Y).
 
