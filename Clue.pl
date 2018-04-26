@@ -34,25 +34,23 @@ Entered when the user makes a suggestion.
 Takes a person, weapon and room card. Also takes whatever player responded and with what card they responded, optionally.
 If no player and card is given, its assumed no one at the table (barring the user) had any of the 3 cards.
 */
-
-
-my_suggestion(Person, Weapon, Room, []) :- me(M), X is M + 1, add_dont_have(X, M, Person, Weapon, Room), notepad().
-my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), X is M + 1, add_dont_have(X, Player, Person, Weapon, Room), notepad().
+my_suggestion(Person, Weapon, Room, []) :- me(M), succ(M,X), add_dont_have(X, M, Person, Weapon, Room), notepad().
+my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), succ(M,X), add_dont_have(X, Player, Person, Weapon, Room), notepad().
 
 /*
 other_suggestion:
 Entered in response to another players suggestion. 
 */
-other_suggestion(Person, Weapon, Room, [Player, Responder]) :- succ(Player,Y),
-		add_dont_have(Y, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), notepad().
-other_suggestion(Person, Weapon, Room, [Player]) :- X is Player + 1, 
+other_suggestion(Person, Weapon, Room, [Player, Responder]) :- succ(Player,X),
+		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), notepad().
+other_suggestion(Person, Weapon, Room, [Player]) :- succ(Player,X), 
 		add_dont_have(X, Player, Person, Weapon, Room), notepad(). 
 
 /*
 notepad:
 Prints an easy to read graphic display of everything known so far.
 */
-notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
+notepad() :- resolve(), player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
 
 %Supporting code: Users dont need to look here
 
@@ -123,12 +121,15 @@ last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_nu
 
 %make all players between start and end not have any of the 3.
 
+add_dont_have(Start, End, Person, Weapon, Room) :- player_num(P), Start > P, 
+	       	add_dont_have(1, End, Person, Weapon, Room).
+add_dont_have(Start, End, Person, Weapon, Room) :- succ(Start,S0), player_num(P), S0 > P, Start \== End,
+		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
+	       	add_dont_have(1, End, Person, Weapon, Room).
+add_dont_have(Start, End, Person, Weapon, Room) :- succ(Start,S0), Start \== End,
+		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
+		add_dont_have(S0, End, Person, Weapon, Room).
 add_dont_have(X, X, _, _, _).
-add_dont_have(Start, End, Person, Weapon, Room) :- player_num(P), Start > P, End \== 1, assert(doesnt_have(1, Person)),
-									assert(doesnt_have(1, Weapon)), assert(doesnt_have(1, Room)), add_dont_have(2, End, Person, Weapon, Room).
-
-add_dont_have(Start, End, Person, Weapon, Room) :- Start \== End, assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)),
-				assert(doesnt_have(Start,Room)), plus(Start, 1, S0), add_dont_have(S0, End, Person, Weapon, Room).
 
 shown(Player,H) :- player_num(Y), set(Player,H,Y).
 
@@ -136,17 +137,26 @@ shown(Player,H) :- player_num(Y), set(Player,H,Y).
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Room)).
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Room), X \== Player, Y \== Player, assert(has(Player,Weapon)).
 check_others(Person,Weapon,Room,Player) :- has(X,Room), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Person)).
+
+check_others(Person,Weapon,Room,Player) :- has(X,Person), X \== Player, assert(has_one(Player,[Weapon, Room])).
+check_others(Person,Weapon,Room,Player) :- has(X,Weapon), X \== Player, assert(has_one(Player,[Person, Room])).
+check_others(Person,Weapon,Room,Player) :- has(X,Room), X \== Player, assert(has_one(Player,[Weapon, Person])).
+
 check_others(_,_,_,_).
+
+resolve() :- doesnt_have(Player, X), has_one(Player, [X,Y]), retract(has_one(Player,[X,Y])), shown(Player,Y), resolve().
+resolve() :- doesnt_have(Player, X), has_one(Player, [Y,X]), retract(has_one(Player,[Y,X])), shown(Player,Y), resolve().
+resolve().
 
 %helpers for notepad
 output_players(P) :- tab(20), op_helper(P,1).
-op_helper(P,X) :- X =< P, write(X), tab(2), plus(X,1,X0), op_helper(P,X0).
+op_helper(P,X) :- X =< P, write(X), tab(2), succ(X,X0), op_helper(P,X0).
 op_helper(P,X) :- X > P, nl. 
 
 output(Players,[H]) :- write(H), write_length(H,I,[]), Z is 20 - I,  tab(Z), line(Players, H, 1), nl.
 output(Players,[H | T]) :- write(H), write_length(H,I,[]), Z is 20 - I,  tab(Z), line(Players, H, 1),  nl, output(Players,T).
 
-line(P, H, X) :- X =< P, has(X,H), write(o), tab(2), plus(X,1,X0), line(P, H, X0).
-line(P, H, X) :- X =< P, doesnt_have(X,H), write(x), tab(2), plus(X,1,X0), line(P, H, X0).
-line(P, H, X) :- X =< P, could_have(X,H), write(?), tab(2), plus(X,1,X0), line(P, H, X0).
+line(P, H, X) :- X =< P, has(X,H), write(o), tab(2), succ(X,X0), line(P, H, X0).
+line(P, H, X) :- X =< P, doesnt_have(X,H), write(x), tab(2), succ(X,X0), line(P, H, X0).
+line(P, H, X) :- X =< P, could_have(X,H), write(?), tab(2), succ(X,X0), line(P, H, X0).
 line(P, H, X) :- X > P.
