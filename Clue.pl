@@ -34,23 +34,29 @@ Entered when the user makes a suggestion.
 Takes a person, weapon and room card. Also takes whatever player responded and with what card they responded, optionally.
 If no player and card is given, its assumed no one at the table (barring the user) had any of the 3 cards.
 */
-my_suggestion(Person, Weapon, Room, []) :- me(M), succ(M,X), add_dont_have(X, M, Person, Weapon, Room), notepad().
-my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), succ(M,X), add_dont_have(X, Player, Person, Weapon, Room), notepad().
+my_suggestion(Person, Weapon, Room, []) :- me(M), succ(M,X), add_dont_have(X, M, Person, Weapon, Room), resolve(), notepad().
+my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), succ(M,X), add_dont_have(X, Player, Person, Weapon, Room), resolve(), notepad().
 
 /*
 other_suggestion:
 Entered in response to another players suggestion. 
 */
 other_suggestion(Person, Weapon, Room, [Player, Responder]) :- succ(Player,X),
-		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), notepad().
-other_suggestion(Person, Weapon, Room, [Player]) :- succ(Player,X), 
-		add_dont_have(X, Player, Person, Weapon, Room), notepad(). 
+		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), resolve(), notepad().
+other_suggestion(Person, Weapon, Room, [Player]) :- succ(Player,X),
+		add_dont_have(X, Player, Person, Weapon, Room), resolve(), notepad(). 
+
+/*
+get_suggestion:
+Takes a list of rooms availible, and returns 
+*/
+get_suggestion(Rooms) :- write(Suggest this:). 
 
 /*
 notepad:
 Prints an easy to read graphic display of everything known so far.
 */
-notepad() :- resolve(), player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
+notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
 
 %Supporting code: Users dont need to look here
 
@@ -142,10 +148,15 @@ check_others(Person,Weapon,Room,Player) :- has(X,Person), X \== Player, assert(h
 check_others(Person,Weapon,Room,Player) :- has(X,Weapon), X \== Player, assert(has_one(Player,[Person, Room])).
 check_others(Person,Weapon,Room,Player) :- has(X,Room), X \== Player, assert(has_one(Player,[Weapon, Person])).
 
-check_others(_,_,_,_).
+check_others(Person,Weapon,Room,Player) :- assert(has_one(Player,[Person,Weapon,Room])).
 
 resolve() :- doesnt_have(Player, X), has_one(Player, [X,Y]), retract(has_one(Player,[X,Y])), shown(Player,Y), resolve().
 resolve() :- doesnt_have(Player, X), has_one(Player, [Y,X]), retract(has_one(Player,[Y,X])), shown(Player,Y), resolve().
+
+resolve() :- doesnt_have(Player,X), has_one(Player, [X,Y,Z]), retract(has_one(Player,[X,Y,Z])), assert(has_one(Player,[Y,Z])), resolve().
+resolve() :- doesnt_have(Player,Y), has_one(Player, [X,Y,Z]), retract(has_one(Player,[X,Y,Z])), assert(has_one(Player,[X,Z])), resolve().
+resolve() :- doesnt_have(Player,Z), has_one(Player, [X,Y,Z]), retract(has_one(Player,[X,Y,Z])), assert(has_one(Player,[Y,X])), resolve().
+
 resolve().
 
 %helpers for notepad
