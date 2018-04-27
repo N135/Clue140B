@@ -56,6 +56,7 @@ get_suggestion(Rooms) :- write(Suggest this:).
 notepad:
 Prints an easy to read graphic display of everything known so far.
 */
+
 notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
 
 %Supporting code: Users dont need to look here
@@ -137,7 +138,15 @@ add_dont_have(Start, End, Person, Weapon, Room) :- succ(Start,S0), Start \== End
 		add_dont_have(S0, End, Person, Weapon, Room).
 add_dont_have(X, X, _, _, _).
 
-shown(Player,H) :- player_num(Y), set(Player,H,Y).
+%indicates that player has been shown a card.
+shown(Player,H) :- player_num(Y), set(Player,H,Y), clean_up(Player,H).
+
+%clears has_one() if card from set is shown
+clean_up(Player,H) :- has_one(Player,Y), member(H,Y), retract(has_one(Player,Y)), clean_up(Player,H).
+clean_up(_,_).
+
+%nonsense has_one to prevent errors (defines has_one in the event that something referencing has_one() calls it before has_one is asserted.)
+has_one(0,[]).
 
 %helpers for other_accusation:
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Room)).
