@@ -49,8 +49,11 @@ other_suggestion(Person, Weapon, Room, [Player]) :- succ(Player,X),
 /*
 get_suggestion:
 Takes a list of rooms availible, and returns 
+
+get_suggestion(Possible_Rooms) :- rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Rooms, Room, false),
+		is_best_room(Possible_Rooms, Possible_Rooms, Possible_Room, false) is_best_person(People, People, Person, false), is_best_weapon(Weapons, Weapons, Weapon, false),
+		write(Room), write(Possible_Room), write(Person), write(Weapon).
 */
-get_suggestion(Rooms) :- write(Suggest this:). 
 
 /*
 notepad:
@@ -177,3 +180,20 @@ line(P, H, X) :- X =< P, has(X,H), write(o), tab(2), succ(X,X0), line(P, H, X0).
 line(P, H, X) :- X =< P, doesnt_have(X,H), write(x), tab(2), succ(X,X0), line(P, H, X0).
 line(P, H, X) :- X =< P, could_have(X,H), write(?), tab(2), succ(X,X0), line(P, H, X0).
 line(P, H, X) :- X > P.
+
+
+%get_suggestion helpers
+is_best_room(ConstRooms, [], Room, false).
+is_best_room(ConstRooms, [], Room, true) :- is_best_room_via_halo(ConstRooms, Room).
+is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 > Num2, is_best_room(RoomsT, Room, false).
+is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num2 > Num1, is_best_room(RoomsT, RoomsH, false).
+is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 == Num2, is_best_room(RoomsT, Room, true).
+
+num_dont_have(Room, 0) :- doesnt_have(P, Room), 
+num_dont_have(Room, Num) :- 
+
+
+%halo = has at least one
+is_best_room_via_halo(Rooms, Room).
+
+
