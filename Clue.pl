@@ -128,15 +128,15 @@ last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_nu
 
 %make all players between start and end not have any of the 3.
 
+add_dont_have(X, X, _, _, _).
 add_dont_have(Start, End, Person, Weapon, Room) :- player_num(P), Start > P, 
 	       	add_dont_have(1, End, Person, Weapon, Room).
-add_dont_have(Start, End, Person, Weapon, Room) :- succ(Start,S0), player_num(P), S0 > P, Start \== End,
+add_dont_have(Start, End, Person, Weapon, Room) :- succ(Start,S0), player_num(P), S0 > P,
 		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
 	       	add_dont_have(1, End, Person, Weapon, Room).
-add_dont_have(Start, End, Person, Weapon, Room) :- succ(Start,S0), Start \== End,
+add_dont_have(Start, End, Person, Weapon, Room) :- succ(Start,S0),
 		assert(doesnt_have(Start, Person)), assert(doesnt_have(Start, Weapon)), assert(doesnt_have(Start,Room)),
 		add_dont_have(S0, End, Person, Weapon, Room).
-add_dont_have(X, X, _, _, _).
 
 %indicates that player has been shown a card.
 shown(Player,H) :- player_num(Y), set(Player,H,Y), clean_up(Player,H).
@@ -148,14 +148,25 @@ clean_up(_,_).
 %nonsense has_at_least_one to prevent errors (defines has_at_least_one in the event that something referencing has_at_least_one() calls it before has_at_least_one is asserted.)
 has_at_least_one(0,[]).
 
-%helpers for other_accusation:
+%helpers for other_suggestion:
+
+/*
+when someone suggests something and someone responds with a card, what can we say about the cards?
+1. if two cards are owned by someone else, has(Player, thirdCard)
+2. if Player doesnt_have two cards, then has(Player, thirdCard)
+3. if one card is owned by someone else, and player doesnt_have one card, then has(Player, thirdCard)
+4. if Player doesnt_have one card or someone has one card, then has_at_least_one(Player, [second, third])
+5. if nobody doesnt have and nobody has, then has_at_least_one(c1, c2, c3).
+*/
 
 %Know that Player has at least Person, Weapon, Room.
 %check_others checks if two of these are owned by some other player(s), which means Player has the odd one out.
 %If only one other player has one of these cards, Player has at least one of the others.
+/* First case */
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Room)).
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Room), X \== Player, Y \== Player, assert(has(Player,Weapon)).
 check_others(Person,Weapon,Room,Player) :- has(X,Room), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Person)).
+
 
 check_others(Person,Weapon,Room,Player) :- has(X,Person), X \== Player, assert(has_at_least_one(Player,[Weapon, Room])).
 check_others(Person,Weapon,Room,Player) :- has(X,Weapon), X \== Player, assert(has_at_least_one(Player,[Person, Room])).
@@ -163,13 +174,11 @@ check_others(Person,Weapon,Room,Player) :- has(X,Room), X \== Player, assert(has
 
 check_others(Person,Weapon,Room,Player) :- assert(has_at_least_one(Player,[Person,Weapon,Room])).
 
-resolve() :- doesnt_have(Player, X), has_at_least_one(Player, [X,Y]), retract(has_at_least_one(Player,[X,Y])), shown(Player,Y), resolve().
-resolve() :- doesnt_have(Player, X), has_at_least_one(Player, [Y,X]), retract(has_at_least_one(Player,[Y,X])), shown(Player,Y), resolve().
-
-resolve() :- doesnt_have(Player,X), has_at_least_one(Player, [X,Y,Z]), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,Z])), resolve().
-resolve() :- doesnt_have(Player,Y), has_at_least_one(Player, [X,Y,Z]), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[X,Z])), resolve().
-resolve() :- doesnt_have(Player,Z), has_at_least_one(Player, [X,Y,Z]), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,X])), resolve().
-
+resolve() :- has_at_least_one(Player, [X,Y]), doesnt_have(Player, X), retract(has_at_least_one(Player,[X,Y])), shown(Player,Y), resolve().
+resolve() :- has_at_least_one(Player, [X,Y]), doesnt_have(Player, Y), retract(has_at_least_one(Player, [X,Y])), shown(Player,Y), resolve().
+resolve() :- has_at_least_one(Player, [X,Y,Z]), doesnt_have(Player,X), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,Z])), resolve().
+resolve() :- has_at_least_one(Player, [X,Y,Z]), doesnt_have(Player,Y), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[X,Z])), resolve().
+resolve() :- has_at_least_one(Player, [X,Y,Z]), doesnt_have(Player,Z),  retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,X])), resolve().
 resolve().
 
 %helpers for notepad
