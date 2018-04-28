@@ -185,16 +185,21 @@ line(P, H, X) :- X > P.
 %get_suggestion helpers
 is_best_room(ConstRooms, [], Room, false).
 is_best_room(ConstRooms, [], Room, true) :- is_best_room_via_halo(ConstRooms, Room).
-is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 > Num2, is_best_room(ConstRooms RoomsT, Room, false).
-is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num2 > Num1, is_best_room(ConstRooms RoomsT, RoomsH, false).
+is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 > Num2, is_best_room(ConstRooms, RoomsT, Room, false).
+is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num2 > Num1, is_best_room(ConstRooms, RoomsT, RoomsH, false).
 is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 == Num2, is_best_room(ConstRooms, RoomsT, Room, true).
 
+<<<<<<< HEAD
 
 %num_dont_have: Takes card were looking for, and the total number of players initially, returns the number of players who dont have that card in result.
 num_dont_have(Card, 1, Result) :- doesnt_have(1,Card), Result = 1.  
 num_dont_have(Card, 1, Result) :- Result = 0.  
 num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), doesnt_have(Player,Card), succ(X,Result).
 num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), Result = X.
+=======
+num_dont_have(SoFar, Room, 0) :- not(doesnt_have(P, Room), not(member(P, SoFar))).
+num_dont_have(SoFar, Room, Num) :- doesnt_have(P, Room), not(member(P, SoFar)), append(SoFar, P, Res), num_dont_have(Res, Room, Num - 1).
+>>>>>>> fbbbc69458f302a49f4913c901065e62c336a352
 
 
 %halo = has at least one
