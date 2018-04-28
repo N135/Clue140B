@@ -189,8 +189,12 @@ is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), 
 is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num2 > Num1, is_best_room(ConstRooms RoomsT, RoomsH, false).
 is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 == Num2, is_best_room(ConstRooms, RoomsT, Room, true).
 
-num_dont_have(Room, 0) :- doesnt_have(P, Room), 
-num_dont_have(Room, Num) :- 
+
+%num_dont_have: Takes card were looking for, and the total number of players initially, returns the number of players who dont have that card in result.
+num_dont_have(Card, 1, Result) :- doesnt_have(1,Card), Result = 1.  
+num_dont_have(Card, 1, Result) :- Result = 0.  
+num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), doesnt_have(Player,Card), succ(X,Result).
+num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), Result = X.
 
 
 %halo = has at least one
