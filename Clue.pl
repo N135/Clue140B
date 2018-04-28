@@ -185,12 +185,12 @@ line(P, H, X) :- X > P.
 %get_suggestion helpers
 is_best_room(ConstRooms, [], Room, false).
 is_best_room(ConstRooms, [], Room, true) :- is_best_room_via_halo(ConstRooms, Room).
-is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 > Num2, is_best_room(ConstRooms RoomsT, Room, false).
-is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num2 > Num1, is_best_room(ConstRooms RoomsT, RoomsH, false).
+is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 > Num2, is_best_room(ConstRooms, RoomsT, Room, false).
+is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num2 > Num1, is_best_room(ConstRooms, RoomsT, RoomsH, false).
 is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 == Num2, is_best_room(ConstRooms, RoomsT, Room, true).
 
-num_dont_have(Room, 0) :- doesnt_have(P, Room), 
-num_dont_have(Room, Num) :- 
+num_dont_have(SoFar, Room, 0) :- not(doesnt_have(P, Room), not(member(P, SoFar))).
+num_dont_have(SoFar, Room, Num) :- doesnt_have(P, Room), not(member(P, SoFar)), append(SoFar, P, Res), num_dont_have(Res, Room, Num - 1).
 
 
 %halo = has at least one
