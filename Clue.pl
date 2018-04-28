@@ -149,6 +149,10 @@ clean_up(_,_).
 has_one(0,[]).
 
 %helpers for other_accusation:
+
+%Know that Player has at least Person, Weapon, Room.
+%check_others checks if two of these are owned by some other player(s), which means Player has the odd one out.
+%If only one other player has one of these cards, Player has at least one of the others.
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Room)).
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Room), X \== Player, Y \== Player, assert(has(Player,Weapon)).
 check_others(Person,Weapon,Room,Player) :- has(X,Room), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Person)).
