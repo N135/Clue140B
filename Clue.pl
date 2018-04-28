@@ -141,12 +141,12 @@ add_dont_have(X, X, _, _, _).
 %indicates that player has been shown a card.
 shown(Player,H) :- player_num(Y), set(Player,H,Y), clean_up(Player,H).
 
-%clears has_one() if card from set is shown
-clean_up(Player,H) :- has_one(Player,Y), member(H,Y), retract(has_one(Player,Y)), clean_up(Player,H).
+%clears has_at_least_one() if card from set is shown
+clean_up(Player,H) :- has_at_least_one(Player,Y), member(H,Y), retract(has_at_least_one(Player,Y)), clean_up(Player,H).
 clean_up(_,_).
 
-%nonsense has_one to prevent errors (defines has_one in the event that something referencing has_one() calls it before has_one is asserted.)
-has_one(0,[]).
+%nonsense has_at_least_one to prevent errors (defines has_at_least_one in the event that something referencing has_at_least_one() calls it before has_at_least_one is asserted.)
+has_at_least_one(0,[]).
 
 %helpers for other_accusation:
 
@@ -157,18 +157,18 @@ check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Weapon), X \== P
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Room), X \== Player, Y \== Player, assert(has(Player,Weapon)).
 check_others(Person,Weapon,Room,Player) :- has(X,Room), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Person)).
 
-check_others(Person,Weapon,Room,Player) :- has(X,Person), X \== Player, assert(has_one(Player,[Weapon, Room])).
-check_others(Person,Weapon,Room,Player) :- has(X,Weapon), X \== Player, assert(has_one(Player,[Person, Room])).
-check_others(Person,Weapon,Room,Player) :- has(X,Room), X \== Player, assert(has_one(Player,[Weapon, Person])).
+check_others(Person,Weapon,Room,Player) :- has(X,Person), X \== Player, assert(has_at_least_one(Player,[Weapon, Room])).
+check_others(Person,Weapon,Room,Player) :- has(X,Weapon), X \== Player, assert(has_at_least_one(Player,[Person, Room])).
+check_others(Person,Weapon,Room,Player) :- has(X,Room), X \== Player, assert(has_at_least_one(Player,[Weapon, Person])).
 
-check_others(Person,Weapon,Room,Player) :- assert(has_one(Player,[Person,Weapon,Room])).
+check_others(Person,Weapon,Room,Player) :- assert(has_at_least_one(Player,[Person,Weapon,Room])).
 
-resolve() :- doesnt_have(Player, X), has_one(Player, [X,Y]), retract(has_one(Player,[X,Y])), shown(Player,Y), resolve().
-resolve() :- doesnt_have(Player, X), has_one(Player, [Y,X]), retract(has_one(Player,[Y,X])), shown(Player,Y), resolve().
+resolve() :- doesnt_have(Player, X), has_at_least_one(Player, [X,Y]), retract(has_at_least_one(Player,[X,Y])), shown(Player,Y), resolve().
+resolve() :- doesnt_have(Player, X), has_at_least_one(Player, [Y,X]), retract(has_at_least_one(Player,[Y,X])), shown(Player,Y), resolve().
 
-resolve() :- doesnt_have(Player,X), has_one(Player, [X,Y,Z]), retract(has_one(Player,[X,Y,Z])), assert(has_one(Player,[Y,Z])), resolve().
-resolve() :- doesnt_have(Player,Y), has_one(Player, [X,Y,Z]), retract(has_one(Player,[X,Y,Z])), assert(has_one(Player,[X,Z])), resolve().
-resolve() :- doesnt_have(Player,Z), has_one(Player, [X,Y,Z]), retract(has_one(Player,[X,Y,Z])), assert(has_one(Player,[Y,X])), resolve().
+resolve() :- doesnt_have(Player,X), has_at_least_one(Player, [X,Y,Z]), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,Z])), resolve().
+resolve() :- doesnt_have(Player,Y), has_at_least_one(Player, [X,Y,Z]), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[X,Z])), resolve().
+resolve() :- doesnt_have(Player,Z), has_at_least_one(Player, [X,Y,Z]), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,X])), resolve().
 
 resolve().
 
