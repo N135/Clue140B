@@ -185,14 +185,18 @@ line(P, H, X) :- X > P.
 
 
 %get_suggestion helpers
+
+%take a list of Rooms and returns the Room with the largest num_dont_have
 is_best_room([RH], Room) :- Room = RH.
 is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = RH.
 is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
 
+%take a list of Weapons and returns the Weapon with the largest num_dont_have
 is_best_weapon([WH], Weapon) :- Weapon = WH.
 is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = WH.
 is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
 
+%take a list of People and returns the Person with the largest num_dont_have
 is_best_person([PH], Person) :- Person = PH.
 is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = PH.
 is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
