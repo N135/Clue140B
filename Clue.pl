@@ -182,12 +182,20 @@ line(P, H, X) :- X =< P, could_have(X,H), write(?), tab(2), succ(X,X0), line(P, 
 line(P, H, X) :- X > P.
 
 
+
+
 %get_suggestion helpers
-is_best_room(ConstRooms, [], Room, false).
-is_best_room(ConstRooms, [], Room, true) :- is_best_room_via_halo(ConstRooms, Room).
-is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 > Num2, is_best_room(ConstRooms, RoomsT, Room, false).
-is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num2 > Num1, is_best_room(ConstRooms, RoomsT, RoomsH, false).
-is_best_room(ConstRooms, [RoomsH | RoomsT], Room) :- num_dont_have(Room, Num1), num_dont_have(RoomsH, Num2), Num1 == Num2, is_best_room(ConstRooms, RoomsT, Room, true).
+is_best_room([RH], Room) :- Room = RH.
+is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = RH.
+is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
+
+is_best_weapon([WH], Weapon) :- Weapon = WH.
+is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = WH.
+is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
+
+is_best_person([PH], Person) :- Person = PH.
+is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = PH.
+is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
 
 %num_dont_have: Takes card were looking for, and the total number of players initially, returns the number of players who dont have that card in result.
 num_dont_have(Card, 1, Result) :- doesnt_have(1,Card), Result = 1.  
