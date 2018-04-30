@@ -8,17 +8,17 @@ and Room playing cards respectively. Also takes number of players at the table a
 where the user falls in the turn order. 
 The assumption that a higher numbered player will always be to the left, barring position player_num.
 */
-setup_game(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num)),
+setup(People,Weapons,Rooms,Player_num,I_am) :- assert(player_num(Player_num)),
 		assert(people(People)), assert(weapons(Weapons)), assert(rooms(Rooms)),
 		setup_people(People), setup_weapons(Weapons), setup_rooms(Rooms),
-		I_am =< Player_num, assert(me(I_am)).
+		I_am =< Player_num, assert(me(I_am)), !.
 /*
-setup_hand:
+hand:
 takes 3 lists; the People cards, Weapons cards and Room cards that start in the players hand.
 */
-setup_hand(People,Weapons,Rooms) :- me(X), setup_people(People,X), setup_weapons(Weapons,X), setup_rooms(Rooms,X),
+hand(People,Weapons,Rooms) :- me(X), setup_people(People,X), setup_weapons(Weapons,X), setup_rooms(Rooms,X),
 		people(Plist), weapons(Wlist), rooms(Rlist),
-		dont_have_except(Plist, People, X), dont_have_except(Wlist, Weapons, X), dont_have_except(Rlist, Rooms, X).
+		dont_have_except(Plist, People, X), dont_have_except(Wlist, Weapons, X), dont_have_except(Rlist, Rooms, X), !.
 
 /*
 make_accusation:
@@ -35,24 +35,25 @@ Entered when the user makes a suggestion.
 Takes a person, weapon and room card. Also takes whatever player responded and with what card they responded, optionally.
 If no player and card is given, its assumed no one at the table (barring the user) had any of the 3 cards.
 */
-my_suggestion(Person, Weapon, Room, []) :- me(M), succ(M,X), add_dont_have(X, M, Person, Weapon, Room), resolve(), notepad().
-my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), succ(M,X), add_dont_have(X, Player, Person, Weapon, Room), resolve(), notepad().
+my_suggestion(Person, Weapon, Room, []) :- me(M), succ(M,X), add_dont_have(X, M, Person, Weapon, Room), resolve(), notepad(), !.
+my_suggestion(Person, Weapon, Room, [Player, Card]) :- shown(Player, Card), me(M), succ(M,X), add_dont_have(X, Player, Person, Weapon, Room), resolve(), !.
 
 /*
 other_suggestion:
 Entered in response to another players suggestion. 
 */
 other_suggestion(Person, Weapon, Room, [Player, Responder]) :- succ(Player,X),
-		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), resolve(), notepad().
+		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), resolve().
 other_suggestion(Person, Weapon, Room, [Player]) :- succ(Player,X),
-		add_dont_have(X, Player, Person, Weapon, Room), resolve(), notepad(). 
+		add_dont_have(X, Player, Person, Weapon, Room), resolve(). 
 /*
 get_suggestion:
 Takes a list of rooms availible, and returns 
 */
-get_suggestion(Possible_Rooms) :- rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Rooms, Room, false),
-		is_best_room(Possible_Rooms, Possible_Rooms, Possible_Room, false), is_best_person(People, People, Person, false), is_best_weapon(Weapons, Weapons, Weapon, false),
-		write(Room), write(Possible_Room), write(Person), write(Weapon).
+get_suggestion(Possible_Rooms) :- rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Room),
+		is_best_room(Possible_Rooms, Possible_Room), is_best_person(People, Person), is_best_weapon(Weapons, Weapon),
+			write("Best Sggestion: "), write(Room), write(", "), write(Person), write(", "), write(Weapon), nl,
+			write("Best Local Suggestion: "), write(Possible_Room), write(", "), write(Person), write(", "), write(Weapon), !.
 
 /*
 notepad:
@@ -85,25 +86,28 @@ setup_have(X,H) :- assert(could_have(X,H)), succ(X0, X), setup_have(X0,H).
 
 %supporting predicates for setup_hand
 
+%Tells prolog that the list of People were shown to me
 setup_people([], Me).
 setup_people([H],Me) :- valid_person(H), shown(Me,H).
 setup_people([H|T],Me) :- valid_person(H), shown(Me,H), setup_people(T, Me).
 
+%Tells prolog that the list of Weapons were shown to me
 setup_weapons([], Me).
 setup_weapons([H],Me) :- valid_weapon(H), shown(Me,H).
 setup_weapons([H|T],Me) :- valid_weapon(H), shown(Me,H), setup_weapons(T, Me).
 
+%Tells prolog that the list of Rooms were shown to me
 setup_rooms([], Me).
 setup_rooms([H],Me) :- valid_room(H), shown(Me,H).
 setup_rooms([H|T],Me) :- valid_room(H), shown(Me,H), setup_rooms(T, Me).
 
+%Tells prolog that all players except Me dont have the cards in the list
 dont_have_except([H|T], Passed, Me) :- not(member(H, Passed)), assert(doesnt_have(Me, H)), dont_have_except(T, Passed, Me).
 dont_have_except([H|T], Passed, Me) :- member(H, Passed), dont_have_except(T, Passed, Me).
 dont_have_except([H], Passed, Me) :-  not(member(H, Passed)), assert(doesnt_have(Me, H)).
 dont_have_except([H], Passed, Me) :-  member(H, Passed).
 
 %establishes who has what, and then removes could_have from all players, sets has for the passed player and could
-
 set(1,H,1) :- retract(could_have(1,H)), assert(has(1,H)).
 set(Player,H,1) :- Player \== 1, retract(could_have(1,H)), assert(doesnt_have(1,H)).
 set(Player,H,X) :- Player == X, retract(could_have(X,H)), assert(has(X,H)), succ(X0,X), set(Player,H,X0).
@@ -114,22 +118,23 @@ set_not(Player,Person,Weapon,Room) :- retract(could_have(Player,Person)), assert
 
 %Supporting code for make_accusation
 
+%these are true if there is only one card per category left in the game
 know_person(Person) :- player_num(NumPlayers), people(PeopleList), valid_person(Person), not(somebody_has(NumPlayers, Person)), last_standing(Person, PeopleList).
 know_weapon(Weapon) :- player_num(NumPlayers), weapons(WeaponsList), valid_weapon(Weapon), not(somebody_has(NumPlayers, Weapon)), last_standing(Weapon, WeaponsList).
 know_room(Room) :-     player_num(NumPlayers), rooms(RoomsList), valid_room(Room), not(somebody_has(NumPlayers, Room)), last_standing(Room, RoomsList).
 
+%True if a player has the given card
 somebody_has(1, Card) :- has(1, Card).
 somebody_has(Player, Card) :- has(Player, Card).
 somebody_has(Player, Card) :- succ(PrevPlayer, Player), somebody_has(PrevPlayer, Card).
 
-% true if all People except for Person is known to be held by some Player.
+% True if all People except for Person is known to be held by some Player.
 last_standing(Card, [Cards_Head]) :- Card == Cards_Head.
 last_standing(Card, [Cards_Head]) :- player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head).
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card == Cards_Head, last_standing(Card, Cards_Tail).
 last_standing(Card, [Cards_Head | Cards_Tail]) :- Card \== Cards_Head, player_num(NumPlayers), somebody_has(NumPlayers, Cards_Head), last_standing(Card, Cards_Tail).
 
 %make all players between start and end not have any of the 3.
-
 add_dont_have(X, X, _, _, _).
 add_dont_have(Start, End, Person, Weapon, Room) :- player_num(P), Start > P, 
 	       	add_dont_have(1, End, Person, Weapon, Room).
@@ -152,6 +157,8 @@ has_at_least_one(0,[]).
 
 %helpers for other_suggestion:
 
+%inferencing called after other_suggestion
+%Tells prolog info about what Player has depending on what others have
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Room)).
 check_others(Person,Weapon,Room,Player) :- has(X,Person), has(Y,Room), X \== Player, Y \== Player, assert(has(Player,Weapon)).
 check_others(Person,Weapon,Room,Player) :- has(X,Room), has(Y,Weapon), X \== Player, Y \== Player, assert(has(Player,Person)).
@@ -160,6 +167,10 @@ check_others(Person,Weapon,Room,Player) :- has(X,Weapon), X \== Player, assert(h
 check_others(Person,Weapon,Room,Player) :- has(X,Room), X \== Player, assert(has_at_least_one(Player,[Weapon, Person])).
 check_others(Person,Weapon,Room,Player) :- assert(has_at_least_one(Player,[Person,Weapon,Room])).
 
+%inferencing called after other_suggestion and after it calls check_others
+%Makes the database consistent by checking the has_at_least_one and checking doesnt_have for Player and if the Player
+%doesnt_have one of the cards in the has_at_least_one, the has_at_least_one set is reduced or if its size is 2, we know
+%Player has the other card.
 resolve() :- has_at_least_one(Player, [X,Y]), doesnt_have(Player, X), retract(has_at_least_one(Player,[X,Y])), shown(Player,Y), resolve().
 resolve() :- has_at_least_one(Player, [X,Y]), doesnt_have(Player, Y), retract(has_at_least_one(Player, [X,Y])), shown(Player,X), resolve().
 resolve() :- has_at_least_one(Player, [X,Y,Z]), doesnt_have(Player,X), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,Z])), resolve().
