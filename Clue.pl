@@ -163,7 +163,7 @@ check_others(Person,Weapon,Room,Player) :- has(X,Room), X \== Player, assert(has
 check_others(Person,Weapon,Room,Player) :- assert(has_at_least_one(Player,[Person,Weapon,Room])).
 
 resolve() :- has_at_least_one(Player, [X,Y]), doesnt_have(Player, X), retract(has_at_least_one(Player,[X,Y])), shown(Player,Y), resolve().
-resolve() :- has_at_least_one(Player, [X,Y]), doesnt_have(Player, Y), retract(has_at_least_one(Player, [X,Y])), shown(Player,Y), resolve().
+resolve() :- has_at_least_one(Player, [X,Y]), doesnt_have(Player, Y), retract(has_at_least_one(Player, [X,Y])), shown(Player,X), resolve().
 resolve() :- has_at_least_one(Player, [X,Y,Z]), doesnt_have(Player,X), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,Z])), resolve().
 resolve() :- has_at_least_one(Player, [X,Y,Z]), doesnt_have(Player,Y), retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[X,Z])), resolve().
 resolve() :- has_at_least_one(Player, [X,Y,Z]), doesnt_have(Player,Z),  retract(has_at_least_one(Player,[X,Y,Z])), assert(has_at_least_one(Player,[Y,X])), resolve().
