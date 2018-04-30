@@ -53,7 +53,10 @@ other_suggestion(Person, Weapon, Room, [Player]) :- succ(Player,X),
 get_suggestion:
 Takes a list of rooms availible, and returns 
 */
-get_suggestion(Possible_Rooms) :- make_accusation(), nl, rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Room),
+
+
+get_suggestion(Possible_Rooms) :- know_person(Person), know_weapon(Weapon), know_room(Room), write("Accuse "), write(Person), write(","), write(Weapon), write(","), write(Room), !.
+get_suggestion(Possible_Rooms) :- rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Room),
 		is_best_room(Possible_Rooms, Possible_Room), is_best_person(People, Person), is_best_weapon(Weapons, Weapon),
 			write("Best Suggestion: "), write(Person), write(", "), write(Weapon), write(", "), write(Room), nl,
 			write("Best Local Suggestion: "), write(Person), write(", "), write(Weapon), write(", "), write(Possible_Room), !.
@@ -253,8 +256,4 @@ num_dont_have(Card, 1, Result) :- doesnt_have(1,Card), Result = 1.
 num_dont_have(Card, 1, Result) :- Result = 0.  
 num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), doesnt_have(Player,Card), succ(X,Result), !.
 num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), Result = X, !.
-
-%halo = has at least one
-is_best_room_via_halo(Rooms, Room).
-
 
