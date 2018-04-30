@@ -26,7 +26,8 @@ This returns true if for every category, nobody has X AND for every card other t
 
 Might be useful to build in write() statements eventually, so that it can be called from inside other functions (notepad could suggest accusation at end.)
 */
-make_accusation(Person, Weapon, Room) :- know(Person), know(Weapon), know(Room).
+make_accusation() :- nl, know_person(Person), know_weapon(Weapon), know_room(Room), write("Accuse "), write(Person), write(","), write(Weapon), write(","), write(Room).
+make_accusation() :- nl, write("No accusation to make at this time").
 
 /*
 my_suggestion:
@@ -60,7 +61,7 @@ notepad:
 Prints an easy to read graphic display of everything known so far.
 */
 
-notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms).
+notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms), make_accusation().
 
 %Supporting code: Users dont need to look here
 
@@ -115,9 +116,9 @@ set_not(Player,Person,Weapon,Room) :- retract(could_have(Player,Person)), assert
 
 %Supporting code for make_accusation
 
-know(Person) :- player_num(NumPlayers), people(PeopleList), valid_person(Person), not(somebody_has(NumPlayers, Person)), last_standing(Person, PeopleList), !.
-know(Weapon) :- player_num(NumPlayers), weapons(WeaponsList), valid_weapon(Weapon), not(somebody_has(NumPlayers, Weapon)), last_standing(Weapon, WeaponsList).
-know(Room) :- 	player_num(NumPlayers), rooms(RoomsList), valid_room(Room), not(somebody_has(NumPlayers, Room)), last_standing(Room, RoomsList).
+know_person(Person) :- player_num(NumPlayers), people(PeopleList), valid_person(Person), not(somebody_has(NumPlayers, Person)), last_standing(Person, PeopleList).
+know_weapon(Weapon) :- player_num(NumPlayers), weapons(WeaponsList), valid_weapon(Weapon), not(somebody_has(NumPlayers, Weapon)), last_standing(Weapon, WeaponsList).
+know_room(Room) :-     player_num(NumPlayers), rooms(RoomsList), valid_room(Room), not(somebody_has(NumPlayers, Room)), last_standing(Room, RoomsList).
 
 somebody_has(1, Card) :- has(1, Card).
 somebody_has(Player, Card) :- has(Player, Card).

@@ -1,15 +1,67 @@
-To test that the accusation works use this:
+Clue-Solver:
 
-setup([mustard, scarlet, plum, green, white, peacock], [rope, lead_pipe, knife, wrench, candlestick, pistol], [kitchen, ballroom, conservatory, dining_room, billiard_room, library, lounge, hall, study], 3, 1).
+How to use:
 
-hand([mustard, scarlet, plum, green, white], [rope], []).
+1). Set up the game with the setup predicate. The first three inputs are lists of the person cards, weapon cards, and room cards, respectively. The last two inputs set up the number of players, and where the user falls in that turn order.
 
-know(Person).
+setup([mustard, scarlet, plum, green, white, peacock], [rope, lead_pipe, knife, wrench, candlestick, pistol], [kitchen, ballroom, conservatory, dining_room, billiard_room, library, lounge, hall, study], 5, 2).
+
+So in the above example, the game has been set up using the normal Clue cards, with 5 players in the game and with the user as the second player in the turn order.
+
+2.) By now the user should have their cards in their hand. The user now passes these cards in via the setup_hand predicate. The three inputs are lists of people cards, weapon cards and room cards respectively.
+
+hand([mustard, white], [rope], [study]).
+
+The above example sets up the users hand with mustard, white, the rope, and the study.
+
+3.) Now the order of play begins, starting with player 1 and moving around the board. This program doesn't track movements or positions; after all, the board changes between versions. It also doesn't check to make sure the turn order is being followed; this is because a player can end their turn without a suggestion, and suggestions are all this program cares about. 
+
+On an opponent's turn, if something is suggested, use the other_suggestion predicate. This predicate takes 4 inputs. The first, second and third are the person, weapon and room cards being suggested, in that order. The last arguement is a list. It either takes one or two inputs. The first input is the suggesting player. The second is the player who responded to the request. If no one responds to the request, then the list only takes one input. 
+
+other_suggestion(peacock, knife, library, [1,4]). 
+
+The above example indicates that Player 1 suggested peacock, with the knife, in the library, and player 4 responded. 
+
+other_suggestion(plum, wrench, ballroom, [1]). 
+
+The above example indicates that Player 1 suggested plum, with the wrench, in the ballroom, and no player responded. 
+
+On the the users turn, the user should use the my_suggestion predicate. This predicate takes the person, weapon and room suggested, in that order as its first three inputs. The fourth input is a list of either length 0 or 2. The empty list is passed if no one has any of the cards suggested. The length 2 list is passed if a player has one of the cards, and the list consists of the player number and the card shown.
+
+my_suggestion(plum, rope, study, []).
+
+In the above example, the user suggested plum, with the rope, in the study, and no player responded. 
+
+my_suggestion(white, pistol, kitchen, [5, pistol]).
+
+In the above example, the user suggested white, with the pistol, in the kitchen, and player 5 showed the pistol in response. 
 
 
+Both of the suggestion predicates will output a handy little notepad, showing what the user knows. X indicates a player doesn't have that card, O indcates they have that card and ? indicates that the state is unknown. The notepad also tells the user when to make an accusation. 
 
-Returns true with Person = peacock
+Notepad example, with a different setup:
 
-an accusation is simply know(Person), know(Weapon), and know(Room).
+                    1  2  3  4  5  
+mustard             x  x  o  x  x  
+plum                ?  ?  x  ?  ?  
+scarlet             ?  ?  x  ?  ?  
+green               x  x  x  x  o  
+gun                 x  x  o  x  x  
+candlestick         ?  ?  x  ?  ?  
+rope                ?  ?  x  ?  ?  
+wrench              ?  ?  x  ?  ?  
+ballroom            ?  ?  x  ?  ?  
+kitchen             ?  ?  x  ?  ?  
+study               x  x  o  x  x  
+bedroom             ?  ?  x  x  ?  
+
+
+No accusation to make at this time
+
+
+The notepad can be brought up with the notepad predicate, taking no inputs, and the accusation state can be brought up with the make_accusation() predicate.
+
+
+my_suggestion()
 
 I also added a my_suggestion predicate which is what the user would call when they are making a suggestion. We need to add a different suggestion_made() predicate which should be called by the user when someone else has made a suggestion. I chose to split it up this way because the arguments are different depending on whether or not the subject is making the suggestion. When the subject makes the suggestion the arguments are the suggested objects and a list of player/card pairs that have been shown to him. For the case where it is someone else making a suggestion, the arguments are again the objects but since we don't know which cards are being shown, the other argument is only a number indicating the player who showed the person making a suggestion their card.
