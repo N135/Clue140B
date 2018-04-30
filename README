@@ -26,14 +26,17 @@ other_suggestion(plum, wrench, ballroom, [1]).
 
 The above example indicates that Player 1 suggested plum, with the wrench, in the ballroom, and no player responded. 
 
-On the the users turn, the user should first use the get_suggestion predicate. The input to this predicate is a list of rooms the user can move to. The output contains three things. First is whether or not the user should make an accusation. The second is the best suggestion out of all the rooms in the game. The third line is the best suggestion out of the rooms the user can move to.
+On the the users turn, the user should first use the get_suggestion predicate. The input to this predicate is a list of rooms the user can move to. If an accusation can be made, then the person, room, and weapon for the accusation are output. Otherwise, the output is the best suggestion out of all the rooms in the game AND the best suggestion out of the rooms the user can move to.
 
 get_suggestion([library,kitchen]).
 
-No accusation to make at this time
 Best Suggestion: plum, candlestick, ballroom
 Best Local Suggestion: plum, candlestick, kitchen
 true.
+
+OR
+
+Accuse: plum, candlestick, kitchen
 
 In the above example, the user can only move to the ballroom or the kitchen. The best move to make globally is to make the suggestion from the ballroom. However, given the rooms availible to the user, the best suggestion is from the kitchen. The user must decide whether it is worth giving up a suggestion to make the optimal suggestion. 
 
