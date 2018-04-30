@@ -1,3 +1,6 @@
+%Noah White, 912775960
+%Ovi Fritsch, 
+
 %User-facing functions!
 %All of these functions should be used by the user to allow the program to know the game state.
 
