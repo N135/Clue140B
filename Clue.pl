@@ -43,24 +43,25 @@ other_suggestion:
 Entered in response to another players suggestion. 
 */
 other_suggestion(Person, Weapon, Room, [Player, Responder]) :- succ(Player,X),
-		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), resolve().
+		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), resolve(), !.
 other_suggestion(Person, Weapon, Room, [Player]) :- succ(Player,X),
-		add_dont_have(X, Player, Person, Weapon, Room), resolve(). 
+		add_dont_have(X, Player, Person, Weapon, Room), resolve(), !. 
 /*
 get_suggestion:
 Takes a list of rooms availible, and returns 
 */
-get_suggestion(Possible_Rooms) :- rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Room),
+get_suggestion(Possible_Rooms) :- make_accusation(), nl, rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Room),
 		is_best_room(Possible_Rooms, Possible_Room), is_best_person(People, Person), is_best_weapon(Weapons, Weapon),
-			write("Best Sggestion: "), write(Room), write(", "), write(Person), write(", "), write(Weapon), nl,
-			write("Best Local Suggestion: "), write(Possible_Room), write(", "), write(Person), write(", "), write(Weapon), !.
+			write("Best Suggestion: "), write(Person), write(", "), write(Weapon), write(", "), write(Room), nl,
+			write("Best Local Suggestion: "), write(Person), write(", "), write(Weapon), write(", "), write(Possible_Room), !.
+
 
 /*
 notepad:
 Prints an easy to read graphic display of everything known so far.
 */
 
-notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms), make_accusation().
+notepad() :- player_num(P), output_players(P), people(People), output(P,People), weapons(Weapons), output(P,Weapons), rooms(Rooms), output(P,Rooms), make_accusation(), !.
 
 %Supporting code: Users dont need to look here
 
@@ -217,6 +218,13 @@ is_best_weapon([WH], Weapon) :- Weapon = WH.
 is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), has(_,WH), Weapon = X.
 is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), has(_,X), Weapon = WH.
 
+%use has_at_least_one as tiebreaker
+is_best_weapon([WH | WT], Weapon) :- is_best_room(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, 
+	has_at_least_one(_,Y), member(WH,Y), Weapon = WH.
+is_best_weapon([WH | WT], Weapon) :- is_best_room(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, 
+	has_at_least_one(_,Y), member(X,Y), Weapon = X.
+is_best_weapon([WH | WT], Weapon) :- is_best_room(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, Weapon = X.
+
 is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Weapon = WH.
 is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Weapon = X.
 
@@ -225,6 +233,13 @@ is_best_person([PH], Person) :- Person = PH.
 
 is_best_person([PH | PT], Person) :- is_best_person(PT, X), has(_,PH), Person = X.
 is_best_person([PH | PT], Person) :- is_best_person(PT, X), has(_,X), Person = PH.
+
+%use has_at_least_one as tiebreaker
+is_best_person([PH | PT], Person) :- is_best_room(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, 
+	has_at_least_one(_,Y), member(PH,Y), Person = PH.
+is_best_person([PH | PT], Person) :- is_best_room(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, 
+	has_at_least_one(_,Y), member(X,Y), Person = X.
+is_best_person([PH | PT], Person) :- is_best_room(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, Person = X.
 
 is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Person = PH.
 is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Person = PH.

@@ -26,7 +26,19 @@ other_suggestion(plum, wrench, ballroom, [1]).
 
 The above example indicates that Player 1 suggested plum, with the wrench, in the ballroom, and no player responded. 
 
-On the the users turn, the user should use the my_suggestion predicate. This predicate takes the person, weapon and room suggested, in that order as its first three inputs. The fourth input is a list of either length 0 or 2. The empty list is passed if no one has any of the cards suggested. The length 2 list is passed if a player has one of the cards, and the list consists of the player number and the card shown.
+On the the users turn, the user should first use the get_suggestion predicate. The input to this predicate is a list of rooms the user can move to. The output contains three things. First is whether or not the user should make an accusation. The second is the best suggestion out of all the rooms in the game. The third line is the best suggestion out of the rooms the user can move to.
+
+get_suggestion([library,kitchen]).
+
+No accusation to make at this time
+Best Suggestion: plum, candlestick, ballroom
+Best Local Suggestion: plum, candlestick, kitchen
+true.
+
+In the above example, the user can only move to the ballroom or the kitchen. The best move to make globally is to make the suggestion from the ballroom. However, given the rooms availible to the user, the best suggestion is from the kitchen. The user must decide whether it is worth giving up a suggestion to make the optimal suggestion. 
+
+
+Once the user decides what to suggest, they must use the my_suggestion predicate. This predicate takes the person, weapon and room suggested, in that order as its first three inputs. The fourth input is a list of either length 0 or 2. The empty list is passed if no one has any of the cards suggested. The length 2 list is passed if a player has one of the cards, and the list consists of the player number and the card shown.
 
 my_suggestion(plum, rope, study, []).
 
@@ -36,10 +48,11 @@ my_suggestion(white, pistol, kitchen, [5, pistol]).
 
 In the above example, the user suggested white, with the pistol, in the kitchen, and player 5 showed the pistol in response. 
 
-
-Both of the suggestion predicates will output a handy little notepad, showing what the user knows. X indicates a player doesn't have that card, O indcates they have that card and ? indicates that the state is unknown. The notepad also tells the user when to make an accusation. 
+Finally, the user can use the notepad predicate to show what the program knows. X indicates a player doesn't have that card, O indcates they have that card and ? indicates that the state is unknown. The notepad also tells the user when to make an accusation. 
 
 Notepad example, with a different setup:
+
+notepad().
 
                     1  2  3  4  5  
 mustard             x  x  o  x  x  
@@ -61,7 +74,3 @@ No accusation to make at this time
 
 The notepad can be brought up with the notepad predicate, taking no inputs, and the accusation state can be brought up with the make_accusation() predicate.
 
-
-my_suggestion()
-
-I also added a my_suggestion predicate which is what the user would call when they are making a suggestion. We need to add a different suggestion_made() predicate which should be called by the user when someone else has made a suggestion. I chose to split it up this way because the arguments are different depending on whether or not the subject is making the suggestion. When the subject makes the suggestion the arguments are the suggested objects and a list of player/card pairs that have been shown to him. For the case where it is someone else making a suggestion, the arguments are again the objects but since we don't know which cards are being shown, the other argument is only a number indicating the player who showed the person making a suggestion their card.
