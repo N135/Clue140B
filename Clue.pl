@@ -46,15 +46,13 @@ other_suggestion(Person, Weapon, Room, [Player, Responder]) :- succ(Player,X),
 		add_dont_have(X, Responder, Person, Weapon, Room), check_others(Person, Weapon, Room, Responder), resolve(), notepad().
 other_suggestion(Person, Weapon, Room, [Player]) :- succ(Player,X),
 		add_dont_have(X, Player, Person, Weapon, Room), resolve(), notepad(). 
-
 /*
 get_suggestion:
 Takes a list of rooms availible, and returns 
-
-get_suggestion(Possible_Rooms) :- rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Rooms, Room, false),
-		is_best_room(Possible_Rooms, Possible_Rooms, Possible_Room, false) is_best_person(People, People, Person, false), is_best_weapon(Weapons, Weapons, Weapon, false),
-		write(Room), write(Possible_Room), write(Person), write(Weapon).
 */
+get_suggestion(Possible_Rooms) :- rooms(Rooms), weapons(Weapons), people(People), is_best_room(Rooms, Rooms, Room, false),
+		is_best_room(Possible_Rooms, Possible_Rooms, Possible_Room, false), is_best_person(People, People, Person, false), is_best_weapon(Weapons, Weapons, Weapon, false),
+		write(Room), write(Possible_Room), write(Person), write(Weapon).
 
 /*
 notepad:
@@ -182,31 +180,50 @@ line(P, H, X) :- X =< P, doesnt_have(X,H), write(x), tab(2), succ(X,X0), line(P,
 line(P, H, X) :- X =< P, could_have(X,H), write(?), tab(2), succ(X,X0), line(P, H, X0).
 line(P, H, X) :- X > P.
 
-
-
-
 %get_suggestion helpers
 
 %take a list of Rooms and returns the Room with the largest num_dont_have
 is_best_room([RH], Room) :- Room = RH.
-is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = RH.
+
+%remove items where the location is already determined.
+is_best_room([RH | RT], Room) :- is_best_person(RT, X), has(_,RH), Room = X.
+is_best_room([RH | RT], Room) :- is_best_person(RT, X), has(_,X), Room = RH.
+
+is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num1 > Num2, Room = RH.
+
+%use has_at_least_one as tiebreaker
+is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, 
+	has_at_least_one(_,Y), member(RH,Y), Room = RH.
+is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, 
+	has_at_least_one(_,Y), member(X,Y), Room = X.
+is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num1 == Num2, Room = X.
+
 is_best_room([RH | RT], Room) :- is_best_room(RT, X), player_num(P), num_dont_have(RH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
 
 %take a list of Weapons and returns the Weapon with the largest num_dont_have
 is_best_weapon([WH], Weapon) :- Weapon = WH.
-is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = WH.
-is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
+
+is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), has(_,WH), Weapon = X.
+is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), has(_,X), Weapon = WH.
+
+is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Weapon = WH.
+is_best_weapon([WH | WT], Weapon) :- is_best_weapon(WT, X), player_num(P), num_dont_have(WH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Weapon = X.
 
 %take a list of People and returns the Person with the largest num_dont_have
 is_best_person([PH], Person) :- Person = PH.
-is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Room = PH.
-is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num2 > Num1, Room = X.
+
+is_best_person([PH | PT], Person) :- is_best_person(PT, X), has(_,PH), Person = X.
+is_best_person([PH | PT], Person) :- is_best_person(PT, X), has(_,X), Person = PH.
+
+is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Person = PH.
+is_best_person([PH | PT], Person) :- is_best_person(PT, X), player_num(P), num_dont_have(PH, P, Num1), num_dont_have(X, P, Num2), Num1 >= Num2, Person = PH.
+
 
 %num_dont_have: Takes card were looking for, and the total number of players initially, returns the number of players who dont have that card in result.
 num_dont_have(Card, 1, Result) :- doesnt_have(1,Card), Result = 1.  
 num_dont_have(Card, 1, Result) :- Result = 0.  
-num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), doesnt_have(Player,Card), succ(X,Result).
-num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), Result = X.
+num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), doesnt_have(Player,Card), succ(X,Result), !.
+num_dont_have(Card, Player, Result) :- succ(P,Player), num_dont_have(Card,P,X), Result = X, !.
 
 %halo = has at least one
 is_best_room_via_halo(Rooms, Room).
